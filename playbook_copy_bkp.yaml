@@ -1,0 +1,27 @@
+- name: Copy files to backup directory
+  hosts: localhost
+  tasks:
+    - name: Create backup directory if it does not exist
+      file:
+        path: /home/administrador/bkp_files
+        state: directory
+
+    - name: Copy producao.conf to backup directory
+      copy:
+        src: /home/administrador/documentos/producao.conf
+        dest: /home/administrador/bkp_files/producao.conf
+
+    - name: Copy playbook_dns.yaml to backup directory
+      copy:
+        src: /home/administrador/documentos/playbook_dns.yaml
+        dest: /home/administrador/bkp_files/playbook_dns.yaml
+
+    - name: Copy playbook_ip1.yaml to backup directory
+      copy:
+        src: /home/administrador/documentos/playbook_ip1.yaml
+        dest: /home/administrador/bkp_files/playbook_ip1.yaml
+
+    - name: Copy playbook_ip2.yaml to backup directory
+      copy:
+        src: /home/administrador/documentos/playbook_ip2.yaml
+        dest: /home/administrador/bkp_files/playbook_ip2.yaml

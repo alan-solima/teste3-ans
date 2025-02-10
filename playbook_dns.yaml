@@ -1,0 +1,42 @@
+- name: Update producao.conf to prioritize DNS (dict.alan.com.br)
+  hosts: localhost
+  tasks:
+    - name: Backup the original producao.conf
+      copy:
+        src: /home/administrador/documentos/producao.conf
+        dest: /home/administrador/documentos/producao.conf.bkp
+        force: yes
+
+    - name: Create a working copy of producao.conf
+      copy:
+        src: /home/administrador/documentos/producao.conf
+        dest: /home/administrador/documentos/producao.conf.copy
+
+    - name: Uncomment dict.alan.com.br resolve if not already uncommented
+      replace:
+        path: /home/administrador/documentos/producao.conf.copy
+        regexp: '#dict\.alan\.com\.br resolve;'
+        replace: 'dict.alan.com.br resolve;'
+
+    - name: Comment IP1 (10.0.0.66:11 resolve) if not already commented
+      replace:
+        path: /home/administrador/documentos/producao.conf.copy
+        regexp: '^(?!#).*10\.0\.0\.66:11 resolve;'
+        replace: '#10.0.0.66:11 resolve;'
+
+    - name: Comment IP2 (10.0.0.67:11 resolve) if not already commented
+      replace:
+        path: /home/administrador/documentos/producao.conf.copy
+        regexp: '^(?!#).*10\.0\.0\.67:11 resolve;'
+        replace: '#10.0.0.67:11 resolve;'
+
+    - name: Replace the original producao.conf with the modified copy
+      copy:
+        src: /home/administrador/documentos/producao.conf.copy
+        dest: /home/administrador/documentos/producao.conf
+        force: yes
+
+    - name: Remove the producao.conf.copy file
+      file:
+        path: /home/administrador/documentos/producao.conf.copy
+        state: absent
