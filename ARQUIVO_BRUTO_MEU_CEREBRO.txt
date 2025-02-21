@@ -1,0 +1,51 @@
+roteiro apresentação DEMO INDIVIDUAL
+
+- se apresentar e fazer a autodescrição se necessário
+
+- começar falando que escolheu uma task bem complicada e dando uma introdução sobre o oneclick, oque é, como surgiu (dor/necessidade) o que faz e como funciona.
+
+slide 1:
+O oneclick é um produto que visa atender a necessidade de diminuir o impacto ao cliente em momentos de crise, e isso é feito através de automações, diminuindo o tempo de atuação da operação, pois runbooks que antes eram realizados manualmente cada etapa, agora podem ser "resumidos" em apenas um clique alterando uma chave no nosso produto.
+Aqui eu dei o exemplo do Extrato. Vamos supor que houve um problema no Extrato que está na AWS e agora é necessário voltar para o ambiente OnPremise, antes existia todo um processo manual da operação em um KB, que levava certo tempo e agora em um clique pode ser alterado em poucos segundos do ambiente da AWS para o OnPremise. Esse seria o conceito geral do oneclick, além do extrato também temos automação para o Saldo, para o One Itaú (na parte do Login Pessoa Física), e agora está entrando também uma automação para o Pix.
+
+Slide 2: 
+Essa automação, é responsável por automatizar o processo de alteração do IP de comunicação com o Banco Central, nas transações do Pix, onde basicamente existe um arquivo de configuração no servidor responsável por determinar em qual IP estará sendo feito o tráfego dos dados, sendo possível estar no DNS, que é um load balancer distribuindo a carga entre esses dois IPs, ou individualmente em um dos IPs, no caso 66 ou o 67. Todos determinados por uma rota conforme a imagem mostra.
+
+Eu vou mostrar para vocês agora o que exatamente estamos alterando...
+
+(abro o servidor e abro o arquivo .conf)
+
+Esse é o arquivo de configuração, contendo informações do load balancer, dict, icom e arq (desço as linhas do arquivo mostrando uma visão geral)
+
+e o que seria DICT, ICOM e ARQ?
+
+Bom, o dict, que a gente tanto fala aqui, é abreviação para "Diretório de Identificadores de Contas Transacionais", e o que isso significa? Ele é o banco de dados que guarda as chaves Pix (como CPF, CNPJ, e-mail, telefone, etc), e mapeia essas chaves às contas dos usuários. Então por exemplo se você tem seu CPF como chave Pix, no DICT além de estar armazenado essa chave pix, existe um mapeamento que vincula esse CPF a sua conta.
+
+E o ICOM, o que seria? é uma abreviação para "Interface de Comunicação", que é o canal que conecta o itaú ao Banco Central para trocar informações do Pix, como consultas, registros de transações e autenticações.
+
+Já o ARQ, significa "Arquitetura de resiliência", são os mecanismos que garantem a continuidade do serviço Pix, mesmo diante de falhas em sistemas, oque assegura uma alta disponibilidade e funcionamento seguro, menos impacto ao cliente, etc
+
+Pode ver que aqui no arquivo existe três linhas específicas, uma do DNS, uma do IP 66 e uma do IP 67, e atualmente o que está em funcionamento é o DNS, pode ver que é o único sem comentário, então está havendo um balanceamento entre o IP 66 e o IP 67.
+
+Agora que já dei uma visão de como funciona o serviço, eu só vou explicar bem rápido como funciona o Pix e depois simulo uma crise e faço a virada de chave para um dos IPs na prática...
+
+ (ainda visualizando o arquivo de configuração)
+vamos supor que o vinicius petroli está devendo 50 reais para o rogerinho, quando ele inicia a transação pelo itaú, fornecendo a chave pix do rogerio, no backend é realizado uma consulta ao DICT passando pelo IP ativo (mostro a linha do dns no arquivo conf), localiza a conta associada a chave pix fornecida, e verifica se se existe ou não.
+
+Depois, acontece a comunicação via ICOM, que conecta o itaú ao banco central e também à instituição do rogério, que pode ser o Itaú também, sem problema nenhum, acontece a autenticação da transação e é transmitindo as informações entre as partes envolvidas, após isso o bacen processa essas transações em tempo real, debitando o valor na conta do Vinicius e creditando na conta do Rogério (e todo esse tráfego dessas transações passa por aqui nesses IPs definidos nesse arquivo de configuração)
+
+Por fim, o sistema notifica os dois sobre o sucesso ou falha da operação, naquela tela do app que a gente conhece bem de pagamento e recebimento do pix.
+
+Acho que com isso dá para entender o nível de complexidade e criticidade que essa automação tem, já é ela que vai definir por qual IP toda a transação do Pix está acontecendo...
+
+(vou para o produto na web)
+Agora, vamos supor que teve um problema no IP 66, então é necessário tirar do DNS e deixar a comunicação apenas no IP 67. vou alterar a chave aqui e observem, eu informo um incidente que deve ser válido (state new, on hold ou in progress), escrevo "alterar chave" nessa validação e avanço com a alteração.
+
+(aguardo rodar os loadings)
+
+Pronto, podem ver que aqui no front já foi feita a atualização, agora todas as transações passarão apenas pelo IP 67, até o outro se normalizar e podermos voltar para o DNS...
+
+(mostro o arquivo do servidor)
+Aqui no arquivo no servidor, podem ver que a linha do DNS está comentada e do IP 67 não mais.
+
+E para que tudo isso fosse possível, eu fui responsável pelo backend completo dessa feature no OneClick, tendo claro o apoio do Zerati, do Rogerinho e do Yuri, além do pessoal da outra área, então foi uma união de trabalhos e conversas que tivemos ao longo das últimas semanas, tivemos também várias dificuldades principalmente em questão de acessos para determinadas ações no servidor, mas no fim deu tudo certo.
